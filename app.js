@@ -38,28 +38,23 @@ document.getElementById('signupForm').onsubmit = async (e) => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    console.log("Attempting to create account for:", username);
-
     try {
-        // Update the URL to your AWS Lambda/API Gateway or Pi address
-        const response = await fetch('https://your-api-url.com/login', {
+        const response = await fetch('https://your-api-url.com/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, email, password })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            alert("Login Successful!");
-            // Store token and redirect user
-            localStorage.setItem('token', data.token);
-            window.location.href = 'dashboard.html';
+            alert("Account created successfully!");
+            localStorage.setItem('token', data.token); // Save login session
+            window.location.href = 'dashboard.html';    // Direct redirect
         } else {
-            alert("Login Failed: " + data.message);
+            alert("Error: " + data.message);
         }
     } catch (error) {
-        console.error("Error connecting to backend:", error);
         alert("Could not connect to the server.");
     }
 };
