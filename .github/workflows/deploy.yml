@@ -1,13 +1,19 @@
-name: Deploy Lambda to AWS
+name: Deploy Lambda
 
 on:
   push:
     branches:
-      - main  # Runs whenever you push to the main branch
+      - main
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -17,27 +23,22 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Dependencies
-        run: |
-          # Install libraries into a folder called 'package'
-          pip install -r requirements.txt -t package/
-          # Copy your lambda script into that same folder
-          cp lambda_function.py package/
-          
-      - name: Zip for Deployment
-        run: |
-          cd package
-          zip -r ../deployment_package.zip .
-          
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: 'us-east-1'
 
-      - name: Push to AWS Lambda
+      - name: Install Dependencies
         run: |
+          pip install -r requirements.txt -t package/
+          cp lambda_function.py package/
+          
+      - name: Zip and Deploy
+        run: |
+          cd package
+          zip -r ../deployment_package.zip .
+          cd ..
           aws lambda update-function-code \
-            --function-name YourLambdaFunctionName \
+            --function-name YourLambdaNameHere \
             --zip-file fileb://deployment_package.zip
